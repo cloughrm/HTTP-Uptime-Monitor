@@ -1,0 +1,32 @@
+<html>
+<head>
+  <title>FI Status</title>
+  <link rel="stylesheet" type="text/css" href="http://pkt.li:8000/static/css/style.css">
+</head>
+<body>
+  <!-- <br/><center><b><font color="#FF0000">FI Dashboard Currently Disabled</font></b></center> -->
+  <div id="tableWrapper">
+    <table id="fistatustable">
+      {% for i, bank in enumerate(banks) %}
+
+        {% if i in [0,5,10,15,20,25,30,35,40] %}<tr>{% end %}
+        <td id="{{bank}}">{{bank.replace('_and_', '&').replace('_', ' ')}}</td>
+        {% if i in [4,9,14,19,24,29,34,39] %}</tr>{% end %}
+
+      {% end %}
+    </table>
+    <div id="messages"></div>
+  </div>
+  <div id="fiSlideIn"></div>
+  <div style="position: absolute; right: 5px; top: 3px;">
+    <a id="timeline_toggle" href="">Toggle Timeline</a>
+  </div>
+
+  <audio id="alarm" src="http://pkt.li:8000/static/alarms/pacman.wav" preload="auto"> 
+
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js" type="text/javascript"></script>
+  <script src="http://cdn.socket.io/stable/socket.io.js"></script>
+  <script src="http://pkt.li:8000/static/js/fi_status.js" type="application/javascript"></script>
+  <script src="http://pkt.li:8000/static/js/date.format.js" type="application/javascript"></script>
+</body>
+</html>
