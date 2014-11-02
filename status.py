@@ -6,33 +6,38 @@ import multiprocessing
 cwd = os.path.dirname(os.path.realpath(__file__))
 num_requests = 3
 key = ''
-headers = {'Cache-Control' : 'no-cache'}
+headers = {'Cache-Control': 'no-cache'}
 post_url = ''
+
 
 def get_code(url):
     # Try loaing the site in 1 second
     try:
         requests.get(url, timeout=1, headers=headers, verify=False)
         return 1
-    except: pass
+    except:
+        pass
 
     # Try loaing the site in 3 seconds
     try:
         requests.get(url, timeout=5, headers=headers, verify=False)
         return 3
-    except: pass
+    except:
+        pass
 
     # Try loaing the site in 12 seconds
     try:
         requests.get(url, timeout=12, headers=headers, verify=False)
         return 10
-    except: return 30
+    except:
+        return 30
+
 
 def check(site):
     code = 0
     for i in xrange(num_requests):
         code += get_code(site['url'])
-    
+
     params = {'name': site['name'], 'key': key}
 
     if 3 <= code <= 5:

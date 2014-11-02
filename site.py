@@ -1,13 +1,16 @@
 import os
 import json
 import time
-import requests
+import tornadio
+import tornado.web
+import tornadio.router
+import tornadio.server
 from feedformatter import Feed
-import tornado.web, tornadio, tornadio.router, tornadio.server
 
 FIStatusSockets = []
 banks = json.loads(open('banks.json').read())
 rss_items = []
+
 
 class FIStatusHandler(tornado.web.RequestHandler):
     def get(self):
@@ -23,10 +26,10 @@ class FIStatusHandler(tornado.web.RequestHandler):
 
         # Create our response object
         res = {
-            'name' : self.get_argument('name'),
-            'status' : self.get_argument('status')
+            'name': self.get_argument('name'),
+            'status': self.get_argument('status')
         }
-        
+
         # Add status to RSS items
         rss_items.insert(0, {
             'title': res['name'],
@@ -54,7 +57,7 @@ class FIStatusHandler(tornado.web.RequestHandler):
                     client.send(json.dumps(res))
                 except:
                     FIStatusSockets.remove(client)
-                    
+
         elif res['status'] == 'RED' and alarm_status == 'ON':
             res['alarm'] = 'OFF'
             for client in FIStatusSockets:
@@ -72,6 +75,7 @@ class FIStatusHandler(tornado.web.RequestHandler):
                 except:
                     FIStatusSockets.remove(client)
 
+
 class FIStatusSocketConnection(tornadio.SocketConnection):
     def on_open(self, *args, **kwargs):
         FIStatusSockets.append(self)
@@ -88,6 +92,7 @@ class FIStatusSocketConnection(tornadio.SocketConnection):
 
     def on_close(self):
         FIStatusSockets.remove(self)
+
 
 class RSSHandler(tornado.web.RequestHandler):
     def get(self):
@@ -109,22 +114,16 @@ class RSSHandler(tornado.web.RequestHandler):
 
 if __name__ == '__main__':
     settings = {
-        'template_path' : os.path.join(os.path.dirname(__file__), 'templates'),
-        'static_path' : os.path.join(os.path.dirname(__file__), 'static'),
+        'template_path': os.path.join(os.path.dirname(__file__), 'templates'),
+        'static_path': os.path.join(os.path.dirname(__file__), 'static'),
     }
-    FIStatusRouter = tornadio.get_router(
-        FIStatusSocketConnection, { 'enabled_protocols':
-            ['websocket', 'xhr-multipart', 'xhr-polling']},
-            resource='fistatus'
-        )
+    FIStatusRouter = tornadio.get_router(FIStatusSocketConnection, {
+        'enabled_protocols': ['websocket', 'xhr-multipart', 'xhr-polling']
+    }, resource='fistatus')
     app = tornado.web.Application([
-            (r'favicon.ico', tornado.web.StaticFileHandler),
-            (r'/fistatus', FIStatusHandler),
-            FIStatusRouter.route(),
-            (r'/rss', RSSHandler),
-        ],
-        socket_io_port=8000,
-        debug=True,
-        **settings
-    )
+        (r'favicon.ico', tornado.web.StaticFileHandler),
+        (r'/fistatus', FIStatusHandler),
+        FIStatusRouter.route(),
+        (r'/rss', RSSHandler),
+    ], socket_io_port=8000, debug=True, **settings)
     tornadio.server.SocketServer(app)
